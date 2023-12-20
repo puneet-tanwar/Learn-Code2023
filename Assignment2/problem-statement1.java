@@ -3,7 +3,7 @@ public class Operation {
     double operandTwo;
     String baseString;
 
-    public void addOperands(int operandOne, int operandTwo) {
+    public void printSum(int operandOne, int operandTwo) {
         int sum = operandOne + operandTwo;
         System.out.println("Result: " + sum);
     }
@@ -21,7 +21,7 @@ public class operationProgram {
         operation.operandTwo = 20.5;
         operation.baseString = "hello";
         
-        operation.addOperands(operation.operandOne, 5);
+        operation.printSum(operation.operandOne, 5);
         operation.printUppercasedString("world");
     }
 }
