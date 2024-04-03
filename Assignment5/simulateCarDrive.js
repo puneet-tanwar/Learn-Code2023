@@ -105,4 +105,4 @@ function notifyAuthorities() {
   console.log("Authorities notified.");
 }
 
-driveCar("Steve");
+driveCar();

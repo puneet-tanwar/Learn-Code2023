@@ -1,4 +1,3 @@
-// Define custom Error classes
 class CarCrashError extends Error {
     constructor(message) {
       super(message);
