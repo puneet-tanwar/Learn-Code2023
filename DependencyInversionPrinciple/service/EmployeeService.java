@@ -1,17 +1,17 @@
 package service;
 
 import model.Employee;
-import repository.EmployeeRepository;
+import repository.EmployeeDataStore;
 
 public class EmployeeService {
 
-  private EmployeeRepository employeeRepository;
+  private EmployeeDataStore employeeDataStore;
 
-  public EmployeeService(EmployeeRepository employeeRepository) {
-    this.employeeRepository = employeeRepository;
+  public EmployeeService(EmployeeDataStore employeeDataStore) {
+    this.employeeDataStore = employeeDataStore;
   }
 
   public void saveEmployee(Employee employee) {
-    employeeRepository.save(employee);
+    employeeDataStore.save(employee);
   }
 }

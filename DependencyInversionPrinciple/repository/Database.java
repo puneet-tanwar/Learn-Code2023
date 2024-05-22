@@ -2,7 +2,7 @@ package repository;
 
 import model.Employee;
 
-public class Database implements EmployeeRepository {
+public class Database implements EmployeeDataStore {
 
   @Override
   public void save(Employee employee) {

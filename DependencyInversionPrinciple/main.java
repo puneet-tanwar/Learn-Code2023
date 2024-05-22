@@ -2,15 +2,15 @@ package main;
 
 import model.Employee;
 import repository.Database;
-import repository.EmployeeRepository;
+import repository.EmployeeDataStore;
 import service.EmployeeService;
 
 public class Main {
 
   public static void main(String[] args) {
-    EmployeeRepository employeeRepository = new Database();
+    EmployeeDataStore employeeDataStore = new Database();
 
-    EmployeeService employeeService = new EmployeeService(employeeRepository);
+    EmployeeService employeeService = new EmployeeService(employeeDataStore);
 
     Employee employee = new Employee("John Doe", "1234 Elm Street");
 

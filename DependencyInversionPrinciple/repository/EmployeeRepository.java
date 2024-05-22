@@ -2,6 +2,6 @@ package repository;
 
 import model.Employee;
 
-public interface EmployeeRepository {
+public interface EmployeeDataStore {
   void save(Employee employee);
 }
