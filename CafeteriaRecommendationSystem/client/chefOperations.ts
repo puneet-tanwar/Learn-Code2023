@@ -25,9 +25,12 @@ export class ChefOperationsHandler {
         break;
       case "3":
         this.getRecommendations();
-        break;      
+        break;
       case "4":
         this.viewFeedbacks();
+        break;
+      case "5":
+        this.getDiscardedList();
         break;
       case "0":
         this.rl.close();
@@ -43,46 +46,76 @@ export class ChefOperationsHandler {
 
   private rollOutNewMenu() {
     console.log("Chef operation: Roll Out New Menu");
-    this.rl.question("Enter the IDs of menu items for the next day's Menu, separated by spaces: ", (input) => {
-      const selectedItems = input.split(" ").map((id: string) => parseInt(id, 10));
-  
-      this.socket.emit("rollOutMenu", selectedItems, (response: any) => {
-        if (response.status === "success") {
-          console.log("New menu items rolled out successfully.");
-        } else {
-          console.log("Failed to roll out new menu items:", response.error);
-        }
-        new UserOperationsHandler(this.socket, this.rl).initiate();
-      });
-    });
+    this.rl.question(
+      "Enter the IDs of menu items for the next day's Menu, separated by spaces: ",
+      (input) => {
+        const selectedItems = input
+          .split(" ")
+          .map((id: string) => parseInt(id, 10));
+
+        this.socket.emit("rollOutMenu", selectedItems, (response: any) => {
+          if (response.status === "success") {
+            console.log("New menu items rolled out successfully.");
+          } else {
+            console.log("Failed to roll out new menu items:", response.error);
+          }
+          new UserOperationsHandler(this.socket, this.rl).initiate();
+        });
+      }
+    );
   }
 
   private async getRecommendations() {
     console.log("Chef operation: Get Recommendations");
     try {
-        const response = await this.recommendationSystem.getRecommendations();
-        if (response.status === "success") {
-            const formattedRecommendations = response.result.map((item: any) => ({
-                'Menu Item ID': item.id,
-                Name: item.name,
-                
-                Price: item.price,
-                'Average Score': item.avgScore.toFixed(2),
-                'Sentiment Score': item.sentiment.toFixed(2),
-                'Last Updated': new Date(item.updated_at).toLocaleString(),
-            }));
-            console.table(formattedRecommendations);
-        } else {
-            console.log("Failed to fetch recommendations:", response.error);
-        }
+      const response = await this.recommendationSystem.getRecommendations();
+      if (response.status === "success") {
+        const formattedRecommendations = response.result.map((item: any) => ({
+          "Menu Item ID": item.id,
+          Name: item.name,
+          Price: item.price,
+          "Average Score": item.avgScore.toFixed(2),
+          "Sentiment Score": item.sentiment.toFixed(2),
+          "Last Updated": new Date(item.updated_at).toLocaleString(),
+        }));
+        console.table(formattedRecommendations);
+      } else {
+        console.log("Failed to fetch recommendations:", response.error);
+      }
     } catch (error) {
-        console.log("Failed to fetch recommendations:", error);
+      console.log("Failed to fetch recommendations:", error);
     } finally {
-        new UserOperationsHandler(this.socket, this.rl).initiate();
+      new UserOperationsHandler(this.socket, this.rl).initiate();
     }
-}
+  }
+
+  private async getDiscardedList() {
+    console.log("Chef operation: Get Discarded List");
+    try {
+      const response =
+        await this.recommendationSystem.getMenuItemsToBeDiscarded();
+      if (response.status === "success") {
+        const formattedItems = response.result.map((item: any) => ({
+          "Menu Item ID": item.id,
+          Name: item.name,
+          Price: item.price,
+          "Average Score": item.avgScore.toFixed(2),
+          "Dislike Score": item.sentiment.toFixed(2),
+          "Last Updated": new Date(item.updated_at).toLocaleString(),
+        }));
+        console.table(formattedItems);
+      } else {
+        console.log("Failed to fetch worst items:", response.error);
+      }
+    } catch (error) {
+      console.log("Failed to fetch worst items:", error);
+    } finally {
+      new UserOperationsHandler(this.socket, this.rl).initiate();
+    }
+  }
 
   private viewFeedbacks() {
-    console.log("Chef operation: View Feedbacks");    
+    console.log("Chef operation: View Feedbacks");
+    new UserOperationsHandler(this.socket, this.rl).initiate();
   }
 }

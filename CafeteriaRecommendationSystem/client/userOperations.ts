@@ -74,9 +74,9 @@ export class UserOperationsHandler {
   private displayChefOptions() {
     console.log("1. View Menu");
     console.log("2. Roll Out New Menu");
-    console.log("3. Generate Recommendations");
-    console.log("4. View Report");
-    console.log("5. View Feedbacks");
+    console.log("3. Generate Recommendations");    
+    console.log("4. View Feedbacks");
+    console.log("5. View Discarded List");
     console.log("0. Exit");
   }
 
