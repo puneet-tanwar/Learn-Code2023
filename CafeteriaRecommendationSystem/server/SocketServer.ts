@@ -9,6 +9,7 @@ import { FeedbackService } from "./services/feedbackService";
 import { NotificationService } from "./services/notificationService";
 import { ChefService } from "./services/chefService";
 import { RecommendationSystem } from "../utils/RecommendationSystem";
+import { DiscardedFeedback } from "./types/discardedFeedback";
 
 interface CallbackResponse {
   status: "success" | "error";
@@ -56,6 +57,10 @@ export class SocketServer {
       this.handleVoting(socket);
       this.handleViewRolledOutMenu(socket);
       this.handleViewNotifications(socket);
+      this.handleDiscardItem(socket);
+      this.handleGetLatestDiscardedItem(socket);
+      this.handleAddFeedbackForDiscardedItem(socket);
+      this.handleGetFeedbackForDiscardedItem(socket);
       this.handleDisconnect(socket);
     });
   }
@@ -105,9 +110,8 @@ export class SocketServer {
     socket.on(
       "viewMenu",
       async (callback: (response: CallbackResponse) => void) => {
-        console.log("Client requested menu data");
-
         try {
+          console.log({ callback });
           const menuItems = await this.userService.getMenuItems();
           callback({ status: "success", result: menuItems });
         } catch (error) {
@@ -199,7 +203,6 @@ export class SocketServer {
           const feedbacks = await this.feedbackService.getFeedbackByMenuItem(
             menuItemId
           );
-          console.log("Feedbacks: ", feedbacks);
           callback({ status: "success", result: feedbacks });
         } catch (error) {
           console.error("Error fetching feedbacks:", error);
@@ -302,6 +305,87 @@ export class SocketServer {
     );
   }
 
+  private handleDiscardItem(socket: CustomSocket) {
+    socket.on(
+      "discardItem",
+      async (item, callback: (response: CallbackResponse) => void) => {
+        try {
+          await this.chefService.discardMenuItem(item);
+          callback({ status: "success" });
+        } catch (error) {
+          console.error("Error discarding item:", error);
+          callback({ status: "error", error });
+        }
+      }
+    );
+  }
+
+  private handleGetLatestDiscardedItem(socket: CustomSocket) {
+    socket.on(
+      "getLatestDiscardedItem",
+      async (callback: (response: CallbackResponse) => void) => {
+        try {
+          const discardedItem = await this.userService.getLatestDiscardedItem();
+          console.log({ discardedItem });
+          console.log({ callback });
+          if (discardedItem) {
+            callback({ status: "success", result: discardedItem });
+          } else {
+            callback({ status: "error", error: "No discarded item available" });
+          }
+        } catch (error) {
+          console.error("Error fetching latest discarded item:", error);
+          callback({ status: "error", error });
+        }
+      }
+    );
+  }
+
+  private handleAddFeedbackForDiscardedItem(socket: CustomSocket) {
+    socket.on(
+      "addFeedbackForDiscardedItem",
+      async (
+        feedback: DiscardedFeedback,
+        callback: (response: CallbackResponse) => void
+      ) => {
+        try {
+          // Assuming feedbackService is properly defined and imported
+          await this.userService.addFeedbackForDiscardedItem(feedback);
+          callback({ status: "success" });
+        } catch (error) {
+          console.error("Error adding feedback for discarded item:", error);
+          callback({ status: "error", error });
+        }
+      }
+    );
+  }
+  private handleGetFeedbackForDiscardedItem(socket: CustomSocket) {
+    socket.on(
+      "getFeedbackForDiscardedItem",
+      async (
+        itemId: string,
+        callback: (response: CallbackResponse) => void
+      ) => {
+        try {
+          // Assuming userService has a method to retrieve feedback for discarded items
+          const feedback = await this.chefService.getFeedbackForDiscardedItem(
+            itemId
+          );
+          if (feedback) {
+            callback({ status: "success", result: feedback });
+          } else {
+            callback({
+              status: "error",
+              error: "No feedback available for this discarded item",
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching feedback for discarded item:", error);
+          callback({ status: "error", error });
+        }
+      }
+    );
+  }
   private handleDisconnect(socket: CustomSocket) {
     socket.on("disconnect", () => {
       console.log("A user disconnected");

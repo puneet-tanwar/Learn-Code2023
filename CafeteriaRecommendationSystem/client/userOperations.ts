@@ -76,7 +76,8 @@ export class UserOperationsHandler {
     console.log("2. Roll Out New Menu");
     console.log("3. Generate Recommendations");    
     console.log("4. View Feedbacks");
-    console.log("5. View Discarded List");
+    console.log("5. Generate Items to be discarded");
+    console.log("6. View feedbacks for discarded Items");
     console.log("0. Exit");
   }
 
@@ -87,6 +88,7 @@ export class UserOperationsHandler {
     console.log("4. View Rolled Out Menu");
     console.log("5. Vote for menu item");
     console.log("6. View my Notifications");
+    console.log("7. Add feedback for discarded item");
     console.log("0. Exit");
   }
 }

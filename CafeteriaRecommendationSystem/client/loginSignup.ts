@@ -43,7 +43,7 @@ export class LoginSignupHandler {
   }
 
   private login() {
-    this.rl.question("Enter your email: ", (email) => {
+    this.rl.question("Enter your username: ", (email) => {
       this.rl.question("Enter your password: ", (password) => {
         this.socket.emit('login', { email, password }, (response: any) => {
           if (response.status === 'success') {
@@ -63,7 +63,7 @@ export class LoginSignupHandler {
 
   private signup() {
     this.rl.question("Enter your name: ", (name) => {
-      this.rl.question("Enter your email: ", (email) => {
+      this.rl.question("Enter your username: ", (email) => {
         this.rl.question("Enter your password: ", (password) => {
           const user = { name, email, password, role: 'employee' }; // Assuming role is user by default
           this.socket.emit('signup', user, (response: any) => {

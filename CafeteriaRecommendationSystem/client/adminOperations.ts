@@ -56,7 +56,7 @@ export class AdminOperationsHandler {
         this.rl.question("Enter the new description: ", (description) => {
           this.rl.question("Enter the new price: ", (price) => {
             this.rl.question(
-              "Enter the new availability status (available/unavailable): ",
+              "Enter the new availability status (1/0): ",
               (availability_status) => {
                 const updatedItem = {
                   id,
@@ -66,14 +66,21 @@ export class AdminOperationsHandler {
                   availability_status,
                 };
 
-                this.socket.emit("updateMenuItem", updatedItem, (response: any) => {
-                  if (response.status === "success") {
-                    console.log("Menu item updated successfully.");
-                  } else {
-                    console.log("Failed to update menu item:", response.error);
+                this.socket.emit(
+                  "updateMenuItem",
+                  updatedItem,
+                  (response: any) => {
+                    if (response.status === "success") {
+                      console.log("Menu item updated successfully.");
+                    } else {
+                      console.log(
+                        "Failed to update menu item:",
+                        response.error
+                      );
+                    }
+                    new UserOperationsHandler(this.socket, this.rl).initiate();
                   }
-                  new UserOperationsHandler(this.socket, this.rl).initiate();
-                });
+                );
               }
             );
           });
@@ -82,34 +89,57 @@ export class AdminOperationsHandler {
     });
   }
 
-  private addNewItem() {
+  private async addNewItem() {
     console.log("Admin operation: Add New Item");
-    this.rl.question("Enter the name of the menu item: ", (name) => {
-      this.rl.question("Enter the description: ", (description) => {
-        this.rl.question("Enter the price: ", (price) => {
-          this.rl.question(
-            "Enter the availability status (available/unavailable): ",
-            (availability_status) => {
-              const newItem = {
-                name,
-                description,
-                price,
-                availability_status,
-              };
 
-              this.socket.emit("addedMenuItem", newItem, (response: any) => {
-                if (response.status === "success") {
-                  console.log("Menu item added successfully.");
-                } else {
-                  console.log("Failed to add menu item:", response.error);
-                }
-                new UserOperationsHandler(this.socket, this.rl).initiate();
-              });
-            }
-          );
-        });
+    const question = (query: string): Promise<string> => {
+      return new Promise((resolve) => {
+        this.rl.question(query, (answer) => resolve(answer));
       });
-    });
+    };
+
+    try {
+      const name = await question("Enter the name of the menu item: ");
+      const description = await question("Enter the description: ");
+      const price = parseFloat(await question("Enter the price: "));
+      const availability_status =
+        (await question("Enter the availability status (1/0): ")) === "1";
+      const food_type = await question("Enter the food type: ");
+      const is_vegetarian =
+        (await question("Is the item vegetarian? (1/0): ")) === "1";
+      const spicy_level = parseInt(
+        await question("Enter the spicy level (0-10): ")
+      );
+      const is_eggetarian =
+        (await question("Is the item eggetarian? (1/0): ")) === "1";
+      const cuisine_type = await question("Enter the cuisine type: ");
+      const is_sweet = (await question("Is the item sweet? (1/0): ")) === "1";
+
+      const newItem = {
+        name,
+        description,
+        price,
+        availability_status,
+        food_type,
+        is_vegetarian,
+        spicy_level,
+        is_eggetarian,
+        cuisine_type,
+        is_sweet,
+      };
+
+      this.socket.emit("addedMenuItem", newItem, (response: any) => {
+        if (response.status === "success") {
+          console.log("Menu item added successfully.");
+        } else {
+          console.log("Failed to add menu item:", response.error);
+        }
+        new UserOperationsHandler(this.socket, this.rl).initiate();
+      });
+    } catch (error) {
+      console.log("Error adding menu item:", error);
+      new UserOperationsHandler(this.socket, this.rl).initiate();
+    }
   }
 
   private deleteItem() {

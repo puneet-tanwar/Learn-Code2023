@@ -2,6 +2,7 @@ import { CustomSocket } from "./types/customSocket";
 import readline from "readline";
 import { viewMenu } from "./viewMenu";
 import { UserOperationsHandler } from "./userOperations";
+import { DiscardedFeedback } from "./types/discardedFeedback";
 
 export class EmployeeOperationsHandler {
   private socket: CustomSocket;
@@ -31,6 +32,9 @@ export class EmployeeOperationsHandler {
         break;
       case "6":
         this.viewNotifications();
+        break;
+      case "7":
+        this.addFeedbackForDiscardedItem();
         break;
       case "0":
         this.rl.close();
@@ -140,22 +144,77 @@ export class EmployeeOperationsHandler {
     });
   }
   // userOperationsHandler.ts
-private viewNotifications() {
-  console.log("Employee operation: View Notifications");
-  this.socket.emit("viewNotifications", (response: any) => {
-    if (response.status === "success") {
-      console.log("Latest Notifications:");
-      const formattedNotifications = response.result.map((notification: any) => ({
-        Title: notification.title,
-        Description: notification.description,
-        Date: new Date(notification.date).toLocaleString(),
-      }));
-      console.table(formattedNotifications);
-    } else {
-      console.log("Failed to fetch notifications:", response.error);
-    }
-    new UserOperationsHandler(this.socket, this.rl).initiate();
-  });
-}
+  private viewNotifications() {
+    console.log("Employee operation: View Notifications");
+    this.socket.emit("viewNotifications", (response: any) => {
+      if (response.status === "success") {
+        console.log("Latest Notifications:");
+        const formattedNotifications = response.result.map(
+          (notification: any) => ({
+            Title: notification.title,
+            Description: notification.description,
+            Date: new Date(notification.date).toLocaleString(),
+          })
+        );
+        console.table(formattedNotifications);
+      } else {
+        console.log("Failed to fetch notifications:", response.error);
+      }
+      new UserOperationsHandler(this.socket, this.rl).initiate();
+    });
+  }
+  private addFeedbackForDiscardedItem() {
+    console.log("Employee operation: Add Feedback for Discarded Item");
 
+    this.socket.emit("getLatestDiscardedItem", (response: any) => {
+      if (response.status === "success" && response.result) {
+        const discardedItem = response.result;
+        console.log(`Latest discarded item: ${discardedItem.item_name}`);
+
+        this.rl.question(
+          "What didn't you like about the food? ",
+          (dislikedAspect) => {
+            this.rl.question(
+              "How would you like the dish to taste? ",
+              (preferredTaste) => {
+                this.rl.question("Share your mom's recipe: ", (momsRecipe) => {
+                  const feedback = {
+                    discardedItemId: discardedItem.discardedItemId,
+                    employeeId: this.socket.currentUserId,
+                    dislikedAspect,
+                    preferredTaste,
+                    momsRecipe,
+                  };
+
+                  this.socket.emit(
+                    "addFeedbackForDiscardedItem",
+                    feedback,
+                    (response: any) => {
+                      if (response.status === "success") {
+                        console.log(
+                          "Feedback for discarded item added successfully."
+                        );
+                      } else {
+                        console.log(
+                          "Failed to add feedback for discarded item:",
+                          response.error
+                        );
+                      }
+                      new UserOperationsHandler(
+                        this.socket,
+                        this.rl
+                      ).initiate();
+                    }
+                  );
+                });
+              }
+            );
+          }
+        );
+      } else {
+        console.log("No discarded items available.");
+        new UserOperationsHandler(this.socket, this.rl).initiate();
+      }
+    });
+  }
 }

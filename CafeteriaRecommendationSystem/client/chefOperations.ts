@@ -32,6 +32,9 @@ export class ChefOperationsHandler {
       case "5":
         this.getDiscardedList();
         break;
+      case "6":
+        this.viewDiscardedItemFeedback();
+        break;
       case "0":
         this.rl.close();
         this.socket.close();
@@ -74,8 +77,7 @@ export class ChefOperationsHandler {
           "Menu Item ID": item.id,
           Name: item.name,
           Price: item.price,
-          "Average Score": item.avgScore.toFixed(2),
-          "Sentiment Score": item.sentiment.toFixed(2),
+          "Sentiment Score": item.avgScore.toFixed(2),
           "Last Updated": new Date(item.updated_at).toLocaleString(),
         }));
         console.table(formattedRecommendations);
@@ -99,11 +101,11 @@ export class ChefOperationsHandler {
           "Menu Item ID": item.id,
           Name: item.name,
           Price: item.price,
-          "Average Score": item.avgScore.toFixed(2),
-          "Dislike Score": item.sentiment.toFixed(2),
+          "Sentiment Score": item.avgScore.toFixed(2),
           "Last Updated": new Date(item.updated_at).toLocaleString(),
         }));
         console.table(formattedItems);
+        this.askForDiscardDecision(response.result);
       } else {
         console.log("Failed to fetch worst items:", response.error);
       }
@@ -114,6 +116,63 @@ export class ChefOperationsHandler {
     }
   }
 
+  private askForDiscardDecision(items: any[]) {
+    this.rl.question("Enter item ID to discard: ", (input) => {
+      const itemId = parseInt(input, 10);
+      const itemToDiscard = items.find((item) => item.id === itemId);
+      if (itemToDiscard) {
+        this.socket.emit("discardItem", itemToDiscard, (response: any) => {
+          if (response.status === "success") {
+            console.log(
+              `Item "${itemToDiscard.name}" (ID: ${itemToDiscard.id}) has been marked as discarded.`
+            );
+          } else {
+            console.log(
+              `Failed to discard item "${itemToDiscard.name}" (ID: ${itemToDiscard.id}):`,
+              response.error
+            );
+          }
+          new UserOperationsHandler(this.socket, this.rl).initiate();
+        });
+      } else {
+        console.log("Invalid item ID. Please try again.");
+        this.askForDiscardDecision(items);
+      }
+    });
+  }
+  private viewDiscardedItemFeedback() {
+    console.log("Employee operation: View Feedback");
+    this.socket.emit("getLatestDiscardedItem", (response: any) => {
+      if (response.status === "success" && response.result) {
+        const discardedItem = response.result;
+        console.log(`Latest discarded item: ${discardedItem.item_name}`);
+        this.socket.emit(
+          "getFeedbackForDiscardedItem",
+          discardedItem.discardedItemId,
+          (feedbackResponse: any) => {
+            if (
+              feedbackResponse.status === "success" &&
+              feedbackResponse.result
+            ) {
+              const feedback = feedbackResponse.result;
+              console.log(
+                `Feedback for discarded item (${discardedItem.item_name}):`
+              );
+              console.table(feedback);
+            } else {
+              console.log(
+                `No feedback available for discarded item (ID: ${discardedItem.discardedItemId}).`
+              );
+            }
+            new UserOperationsHandler(this.socket, this.rl).initiate();
+          }
+        );
+      } else {
+        console.log("No discarded items available.");
+        new UserOperationsHandler(this.socket, this.rl).initiate();
+      }
+    });
+  }
   private viewFeedbacks() {
     console.log("Chef operation: View Feedbacks");
     new UserOperationsHandler(this.socket, this.rl).initiate();

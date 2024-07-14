@@ -10,7 +10,7 @@ export class AdminService {
     this.notificationService = new NotificationService(); 
   }
   public async addMenuItem(newItem: MenuItem): Promise<void> {
-    const query = "INSERT INTO menuItems SET ?";
+    const query = "INSERT INTO menu SET ?";
     await runQuery(query, newItem);
     await this.notificationService.addNotification(
       "New Menu Item Added",
@@ -19,7 +19,7 @@ export class AdminService {
   }
 
   public async updateMenuItem(updatedItem: MenuItem): Promise<void> {
-    const query = "UPDATE menuItems SET name = ?, description = ?, price = ?, availability_status = ? WHERE id = ?";
+    const query = "UPDATE menu SET name = ?, description = ?, price = ?, availability_status = ? WHERE id = ?";
     const values = [
       updatedItem.name,
       updatedItem.description,
@@ -31,7 +31,7 @@ export class AdminService {
   }
 
   public async deleteMenuItem(id: string): Promise<void> {
-    const query = "DELETE FROM menuItems WHERE id = ?";
+    const query = "DELETE FROM menu WHERE id = ?";
     await runQuery(query, [id]);
   }
 
