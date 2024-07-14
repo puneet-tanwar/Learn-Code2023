@@ -8,7 +8,7 @@ export class EmployeeOperationsHandler {
   private socket: CustomSocket;
   private rl: readline.Interface;
   private recommendationSystem: RecommendationSystem;
-  
+
   constructor(socket: CustomSocket, rl: readline.Interface) {
     this.socket = socket;
     this.rl = rl;
@@ -42,7 +42,7 @@ export class EmployeeOperationsHandler {
         this.updateMyPreference();
         break;
       case "9":
-        // this.getRecommendationForUser();
+        this.getRecommendationForUser();
         break;
       case "0":
         this.rl.close();
@@ -296,26 +296,24 @@ export class EmployeeOperationsHandler {
       }
     );
   }
-  // private async getRecommendationForUser() {
-  //   console.log("Chef operation: Get Recommendations");
-  //   try {
-  //     const response = await this.recommendationSystem.getRecommendationsForUser(this.socket.currentUserId,);
-  //     if (response.status === "success") {
-  //       // const formattedRecommendations = response.result.map((item: any) => ({
-  //       //   "Menu Item ID": item.id,
-  //       //   Name: item.name,
-  //       //   Price: item.price,
-  //       //   "Sentiment Score": item.avgScore.toFixed(2),
-  //       //   "Last Updated": new Date(item.updated_at).toLocaleString(),
-  //       // }));
-  //       // console.table(formattedRecommendations);
-  //     } else {
-  //       console.log("Failed to fetch recommendations:", response.error);
-  //     }
-  //   } catch (error) {
-  //     console.log("Failed to fetch recommendations:", error);
-  //   } finally {
-  //     new UserOperationsHandler(this.socket, this.rl).initiate();
-  //   }
-  // }
+
+  private getRecommendationForUser() {
+    console.log("Employee operation: View My Recommendations");
+    this.socket.emit("getMyRecommendation", (response: any) => {
+      if (response.status === "success") {
+        const recommendations = response.result.result;
+        const formattedRecommendations = recommendations.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          price: item.price,
+        }));
+
+        console.table(formattedRecommendations);
+      } else {
+        console.log("Failed to fetch recommendations:", response.error);
+      }
+      new UserOperationsHandler(this.socket, this.rl).initiate();
+    });
+  }
 }

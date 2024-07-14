@@ -107,4 +107,14 @@ export class UserService {
       hasSweetTooth,
     ]);
   }
+
+  async getUserPreferences(userId: number): Promise<UserPreferences | null> {
+    const query = `
+      SELECT isEggetarian, isVeg, spiceLevel, cuisinePreference, hasSweetTooth
+      FROM usertastepreferences
+      WHERE userId = ?
+    `;
+    const rows = await runQuery(query, [userId]);
+    return rows.length > 0 ? rows[0] : null;
+  }
 }
