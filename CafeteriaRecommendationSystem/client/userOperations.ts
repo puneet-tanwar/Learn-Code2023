@@ -89,6 +89,8 @@ export class UserOperationsHandler {
     console.log("5. Vote for menu item");
     console.log("6. View my Notifications");
     console.log("7. Add feedback for discarded item");
+    console.log("8. Update my preferences");
+    console.log("9. Get recommendation for my preferences");
     console.log("0. Exit");
   }
 }

@@ -2,15 +2,17 @@ import { CustomSocket } from "./types/customSocket";
 import readline from "readline";
 import { viewMenu } from "./viewMenu";
 import { UserOperationsHandler } from "./userOperations";
-import { DiscardedFeedback } from "./types/discardedFeedback";
+import { RecommendationSystem } from "../server/utils/RecommendationSystem";
 
 export class EmployeeOperationsHandler {
   private socket: CustomSocket;
   private rl: readline.Interface;
-
+  private recommendationSystem: RecommendationSystem;
+  
   constructor(socket: CustomSocket, rl: readline.Interface) {
     this.socket = socket;
     this.rl = rl;
+    this.recommendationSystem = new RecommendationSystem(socket);
   }
 
   public handle(choice: string) {
@@ -35,6 +37,12 @@ export class EmployeeOperationsHandler {
         break;
       case "7":
         this.addFeedbackForDiscardedItem();
+        break;
+      case "8":
+        this.updateMyPreference();
+        break;
+      case "9":
+        // this.getRecommendationForUser();
         break;
       case "0":
         this.rl.close();
@@ -165,7 +173,6 @@ export class EmployeeOperationsHandler {
   }
   private addFeedbackForDiscardedItem() {
     console.log("Employee operation: Add Feedback for Discarded Item");
-
     this.socket.emit("getLatestDiscardedItem", (response: any) => {
       if (response.status === "success" && response.result) {
         const discardedItem = response.result;
@@ -217,4 +224,98 @@ export class EmployeeOperationsHandler {
       }
     });
   }
+  private updateMyPreference() {
+    console.log("Employee operation: Update My Preferences");
+
+    this.rl.question(
+      "Are you eggetarian? (1 for yes, 0 for no): ",
+      (isEggetarianAnswer) => {
+        const isEggetarian = parseInt(isEggetarianAnswer, 10) === 1;
+
+        this.rl.question(
+          "Are you vegetarian? (1 for yes, 0 for no): ",
+          (isVegAnswer) => {
+            const isVeg = parseInt(isVegAnswer, 10) === 1;
+
+            this.rl.question(
+              "Spice level preference (1-10): ",
+              (spiceLevelAnswer) => {
+                const spiceLevel = parseInt(spiceLevelAnswer, 10);
+                if (isNaN(spiceLevel) || spiceLevel < 1 || spiceLevel > 10) {
+                  console.log(
+                    "Invalid spice level. Please enter a number between 1 and 10."
+                  );
+                  this.updateMyPreference();
+                  return;
+                }
+
+                this.rl.question(
+                  "Cuisine preference: ",
+                  (cuisinePreference) => {
+                    this.rl.question(
+                      "Do you have a sweet tooth? (1 for yes, 0 for no): ",
+                      (hasSweetToothAnswer) => {
+                        const hasSweetTooth =
+                          parseInt(hasSweetToothAnswer, 10) === 1;
+
+                        const preferences = {
+                          userId: this.socket.currentUserId,
+                          isEggetarian,
+                          isVeg,
+                          spiceLevel,
+                          cuisinePreference,
+                          hasSweetTooth,
+                        };
+
+                        this.socket.emit(
+                          "updateUserPreferences",
+                          preferences,
+                          (response: any) => {
+                            if (response.status === "success") {
+                              console.log("Preferences updated successfully.");
+                            } else {
+                              console.log(
+                                "Failed to update preferences:",
+                                response.error
+                              );
+                            }
+                            new UserOperationsHandler(
+                              this.socket,
+                              this.rl
+                            ).initiate();
+                          }
+                        );
+                      }
+                    );
+                  }
+                );
+              }
+            );
+          }
+        );
+      }
+    );
+  }
+  // private async getRecommendationForUser() {
+  //   console.log("Chef operation: Get Recommendations");
+  //   try {
+  //     const response = await this.recommendationSystem.getRecommendationsForUser(this.socket.currentUserId,);
+  //     if (response.status === "success") {
+  //       // const formattedRecommendations = response.result.map((item: any) => ({
+  //       //   "Menu Item ID": item.id,
+  //       //   Name: item.name,
+  //       //   Price: item.price,
+  //       //   "Sentiment Score": item.avgScore.toFixed(2),
+  //       //   "Last Updated": new Date(item.updated_at).toLocaleString(),
+  //       // }));
+  //       // console.table(formattedRecommendations);
+  //     } else {
+  //       console.log("Failed to fetch recommendations:", response.error);
+  //     }
+  //   } catch (error) {
+  //     console.log("Failed to fetch recommendations:", error);
+  //   } finally {
+  //     new UserOperationsHandler(this.socket, this.rl).initiate();
+  //   }
+  // }
 }

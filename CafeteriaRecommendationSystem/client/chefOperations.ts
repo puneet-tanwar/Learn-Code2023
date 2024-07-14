@@ -2,17 +2,17 @@ import { CustomSocket } from "./types/customSocket";
 import readline from "readline";
 import { viewMenu } from "./viewMenu";
 import { UserOperationsHandler } from "./userOperations";
-import { RecommendationSystem } from "../utils/RecommendationSystem";
+// import { RecommendationSystem } from "../server/utils/RecommendationSystem";
 
 export class ChefOperationsHandler {
   private socket: CustomSocket;
   private rl: readline.Interface;
-  private recommendationSystem: RecommendationSystem;
+  // private recommendationSystem: RecommendationSystem;
 
   constructor(socket: CustomSocket, rl: readline.Interface) {
     this.socket = socket;
     this.rl = rl;
-    this.recommendationSystem = new RecommendationSystem(socket);
+    // this.recommendationSystem = new RecommendationSystem(socket);
   }
 
   public handle(choice: string) {
@@ -68,36 +68,32 @@ export class ChefOperationsHandler {
     );
   }
 
-  private async getRecommendations() {
+  private getRecommendations() {
     console.log("Chef operation: Get Recommendations");
-    try {
-      const response = await this.recommendationSystem.getRecommendations();
+    this.socket.emit("getRecommendations", (response: any) => {
       if (response.status === "success") {
-        const formattedRecommendations = response.result.map((item: any) => ({
-          "Menu Item ID": item.id,
-          Name: item.name,
-          Price: item.price,
-          "Sentiment Score": item.avgScore.toFixed(2),
-          "Last Updated": new Date(item.updated_at).toLocaleString(),
-        }));
+        const formattedRecommendations = response.result.result.map(
+          (item: any) => ({
+            "Menu Item ID": item.id,
+            Name: item.name,
+            Price: item.price,
+            "Sentiment Score": item.avgScore.toFixed(2),
+            "Last Updated": new Date(item.updated_at).toLocaleString(),
+          })
+        );
         console.table(formattedRecommendations);
       } else {
         console.log("Failed to fetch recommendations:", response.error);
       }
-    } catch (error) {
-      console.log("Failed to fetch recommendations:", error);
-    } finally {
       new UserOperationsHandler(this.socket, this.rl).initiate();
-    }
+    });
   }
 
-  private async getDiscardedList() {
+  private getDiscardedList() {
     console.log("Chef operation: Get Discarded List");
-    try {
-      const response =
-        await this.recommendationSystem.getMenuItemsToBeDiscarded();
+    this.socket.emit("getDiscardedList", (response: any) => {
       if (response.status === "success") {
-        const formattedItems = response.result.map((item: any) => ({
+        const formattedItems = response.result.result.map((item: any) => ({
           "Menu Item ID": item.id,
           Name: item.name,
           Price: item.price,
@@ -107,13 +103,10 @@ export class ChefOperationsHandler {
         console.table(formattedItems);
         this.askForDiscardDecision(response.result);
       } else {
-        console.log("Failed to fetch worst items:", response.error);
+        console.log("Failed to fetch discarded items:", response.error);
+        new UserOperationsHandler(this.socket, this.rl).initiate();
       }
-    } catch (error) {
-      console.log("Failed to fetch worst items:", error);
-    } finally {
-      new UserOperationsHandler(this.socket, this.rl).initiate();
-    }
+    });
   }
 
   private askForDiscardDecision(items: any[]) {

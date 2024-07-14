@@ -2,6 +2,7 @@ import { runQuery } from "../database";
 import { User } from "../types/user";
 import { MenuItem } from "../types/menuItem";
 import { DiscardedFeedback } from "../types/discardedFeedback";
+import { UserPreferences } from "../types/userPreferences";
 
 export class UserService {
   async createUser(user: User) {
@@ -76,20 +77,34 @@ export class UserService {
       throw error;
     }
   }
-}
 
-// function parseVotes(votes: Array<number>): number {
-//   try {
-//     if(!votes.length) return 0;
-//     console.log(votes);
-//     const parsedVotes = JSON.parse(votes);
-//     if (Array.isArray(parsedVotes) && parsedVotes.every((v: any) => typeof v === 'number')) {
-//       return parsedVotes;
-//     } else {
-//       return [];
-//     }
-//   } catch (error) {
-//     console.error("Error parsing votes:", error);
-//     return [];
-//   }
-// }
+  async updateUserPreferences(preferences: UserPreferences): Promise<void> {
+    const {
+      userId,
+      isEggetarian,
+      isVeg,
+      spiceLevel,
+      cuisinePreference,
+      hasSweetTooth,
+    } = preferences;
+
+    const query = `
+      INSERT INTO usertastepreferences (userId, isEggetarian, isVeg, spiceLevel, cuisinePreference, hasSweetTooth)
+      VALUES (?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+      isEggetarian = VALUES(isEggetarian),
+      isVeg = VALUES(isVeg),
+      spiceLevel = VALUES(spiceLevel),
+      cuisinePreference = VALUES(cuisinePreference),
+      hasSweetTooth = VALUES(hasSweetTooth)
+    `;
+    await runQuery(query, [
+      userId,
+      isEggetarian,
+      isVeg,
+      spiceLevel,
+      cuisinePreference,
+      hasSweetTooth,
+    ]);
+  }
+}

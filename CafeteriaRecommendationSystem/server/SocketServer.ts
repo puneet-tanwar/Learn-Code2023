@@ -8,8 +8,9 @@ import { Feedback } from "./types/feedback";
 import { FeedbackService } from "./services/feedbackService";
 import { NotificationService } from "./services/notificationService";
 import { ChefService } from "./services/chefService";
-import { RecommendationSystem } from "../utils/RecommendationSystem";
+import { RecommendationSystem } from "./utils/RecommendationSystem";
 import { DiscardedFeedback } from "./types/discardedFeedback";
+import { UserPreferences } from "./types/userPreferences";
 
 interface CallbackResponse {
   status: "success" | "error";
@@ -30,7 +31,7 @@ export class SocketServer {
   private chefService = new ChefService();
   private notificationService = new NotificationService();
   private userSessions = new Map<string, User>();
-
+  // private recommendationSystem: RecommendationSystem;
   constructor(httpServer: HttpServer) {
     this.io = new Server(httpServer, {
       cors: {
@@ -39,6 +40,7 @@ export class SocketServer {
       },
     });
     this.initializeSocket();
+    // this.recommendationSystem = new RecommendationSystem(socket);
   }
 
   private initializeSocket() {
@@ -61,6 +63,8 @@ export class SocketServer {
       this.handleGetLatestDiscardedItem(socket);
       this.handleAddFeedbackForDiscardedItem(socket);
       this.handleGetFeedbackForDiscardedItem(socket);
+      this.handleUpdateUserPreferences(socket);
+      this.handleGetDiscardedList(socket);
       this.handleDisconnect(socket);
     });
   }
@@ -212,14 +216,15 @@ export class SocketServer {
     );
   }
 
-  private handleGetRecommendations(socket: CustomSocket) {
+  private handleGetRecommendations(socket: any) {
     socket.on(
-      "getAllMenuItemsWithFeedbacks",
+      "getRecommendations",
       async (callback: (response: CallbackResponse) => void) => {
         try {
-          const menuItems = await this.userService.getMenuItems();
-          const feedbacks = await this.feedbackService.getAllFeedback();
-          callback({ status: "success", result: { menuItems, feedbacks } });
+          const recommendationSystem = new RecommendationSystem(socket);
+          const response = await recommendationSystem.getRecommendations();
+
+          callback({ status: "success", result: response });
         } catch (error) {
           console.error("Error fetching recommendations:", error);
           callback({ status: "error", error });
@@ -304,7 +309,24 @@ export class SocketServer {
       }
     );
   }
+  private handleGetDiscardedList(socket: any) {
+    socket.on(
+      "getDiscardedList",
+      async (callback: (response: CallbackResponse) => void) => {
+        try {
+          console.log("getting discarded items");
+          const recommendationSystem = new RecommendationSystem(socket);
+          const response =
+            await recommendationSystem.getMenuItemsToBeDiscarded();
 
+          callback({ status: "success", result: response });
+        } catch (error) {
+          console.error("Error fetching recommendations:", error);
+          callback({ status: "error", error });
+        }
+      }
+    );
+  }
   private handleDiscardItem(socket: CustomSocket) {
     socket.on(
       "discardItem",
@@ -382,6 +404,26 @@ export class SocketServer {
         } catch (error) {
           console.error("Error fetching feedback for discarded item:", error);
           callback({ status: "error", error });
+        }
+      }
+    );
+  }
+  private handleUpdateUserPreferences(socket: CustomSocket) {
+    socket.on(
+      "updateUserPreferences",
+      async (preferences: UserPreferences, callback) => {
+        try {
+          await this.userService.updateUserPreferences(preferences);
+          callback({
+            status: "success",
+            message: "Preferences updated successfully.",
+          });
+        } catch (error) {
+          console.error("Error updating preferences:", error);
+          callback({
+            status: "error",
+            message: "Failed to update preferences.",
+          });
         }
       }
     );
