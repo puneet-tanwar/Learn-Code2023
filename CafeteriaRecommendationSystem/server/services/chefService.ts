@@ -8,7 +8,7 @@ export class ChefService {
   private notificationService: NotificationService;
 
   constructor() {
-    this.notificationService = new NotificationService(); // Initialize NotificationService instance
+    this.notificationService = new NotificationService();
   }
 
   async proposeMenuItems(menuItemIds: number[]): Promise<void> {
@@ -28,7 +28,7 @@ export class ChefService {
     await runQuery(query, [values]);
     await this.notificationService.addNotification(
       "Menu proposed for next day",
-      "Chef has proposed new menu items, check it out and vote for your favouraite"
+      "Chef has proposed new menu items, check it out and vote for your favorite"
     );
   }
 
@@ -45,15 +45,15 @@ export class ChefService {
     );
   }
 
-  async getFeedbackForDiscardedItem(itemId: String): Promise<DiscardedFeedback[]> {
-    console.log({itemId})
+  async getFeedbackForDiscardedItem(
+    itemId: string
+  ): Promise<DiscardedFeedback[]> {
     const query = `
-      SELECT  dislikedAspect, preferredTaste, momsRecipe
+      SELECT dislikedAspect, preferredTaste, momsRecipe
       FROM discarded_item_feedback
       WHERE discardedItemId = ?
     `;
     const result = await runQuery(query, [itemId]);
-    console.log({result})
     return result;
   }
 }

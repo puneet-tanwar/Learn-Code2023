@@ -2,7 +2,7 @@ import { CustomSocket } from "./types/customSocket";
 import readline from "readline";
 import { UserOperationsHandler } from "./userOperations";
 
-export function viewMenu(socket: CustomSocket, rl: readline.Interface) {
+export function viewMenu(socket: CustomSocket, rl: readline.Interface): void {
   console.log("Requesting menu data...");
 
   socket.emit("viewMenu", (response: any) => {
@@ -19,6 +19,13 @@ export function viewMenu(socket: CustomSocket, rl: readline.Interface) {
       console.log("Failed to fetch menu items:", response.error);
     }
 
-    new UserOperationsHandler(socket, rl).initiate();
+    promptUserOperations(socket, rl);
   });
+}
+
+function promptUserOperations(
+  socket: CustomSocket,
+  rl: readline.Interface
+): void {
+  new UserOperationsHandler(socket, rl).initiate();
 }

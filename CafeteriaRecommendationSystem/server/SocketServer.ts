@@ -116,7 +116,6 @@ export class SocketServer {
       "viewMenu",
       async (callback: (response: CallbackResponse) => void) => {
         try {
-          console.log({ callback });
           const menuItems = await this.userService.getMenuItems();
           callback({ status: "success", result: menuItems });
         } catch (error) {
@@ -432,15 +431,16 @@ export class SocketServer {
   private handleGetMyRecommendation(socket: any) {
     socket.on(
       "getMyRecommendation",
-      async (        
-        callback: (response: CallbackResponse) => void
-      ) => {
+      async (callback: (response: CallbackResponse) => void) => {
         try {
           // console.log("oldilfj");
           // console.log(socket.data.currentUser.id);
           // Implement your logic here to fetch recommendations based on user preferences
           const recommendationSystem = new RecommendationSystem(socket);
-          const recommendations = await recommendationSystem.getRecommendationsForUser(socket.data.currentUser.id);
+          const recommendations =
+            await recommendationSystem.getRecommendationsForUser(
+              socket.data.currentUser.id
+            );
 
           callback({ status: "success", result: recommendations });
         } catch (error) {

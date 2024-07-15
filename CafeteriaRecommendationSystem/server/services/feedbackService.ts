@@ -1,4 +1,3 @@
-
 import { runQuery } from "../database";
 import { Feedback } from "../types/feedback";
 

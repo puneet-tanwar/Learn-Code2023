@@ -62,19 +62,17 @@ export class UserOperationsHandler {
   }
 
   private displayAdminOptions() {
-    console.log("1. Create New User Account");
-    console.log("2. View Menu");
-    console.log("3. Update Menu Item");
-    console.log("4. Add New Menu Item");
-    console.log("5. Delete Menu Item");
-    console.log("6. View Monthly Report");
+    console.log("1. View Menu");
+    console.log("2. Update Menu Item");
+    console.log("3. Add New Menu Item");
+    console.log("4. Delete Menu Item");
     console.log("0. Exit");
   }
 
   private displayChefOptions() {
     console.log("1. View Menu");
     console.log("2. Roll Out New Menu");
-    console.log("3. Generate Recommendations");    
+    console.log("3. Generate Recommendations");
     console.log("4. View Feedbacks");
     console.log("5. Generate Items to be discarded");
     console.log("6. View feedbacks for discarded Items");

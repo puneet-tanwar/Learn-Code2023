@@ -15,22 +15,16 @@ export class AdminOperationsHandler {
   public handle(choice: string) {
     switch (choice) {
       case "1":
-        this.addUser();
-        break;
-      case "2":
         viewMenu(this.socket, this.rl);
         break;
-      case "3":
+      case "2":
         this.updateMenuItem();
         break;
-      case "4":
+      case "3":
         this.addNewItem();
         break;
-      case "5":
+      case "4":
         this.deleteItem();
-        break;
-      case "6":
-        this.viewMonthlyReport();
         break;
       case "0":
         this.rl.close();
@@ -44,49 +38,43 @@ export class AdminOperationsHandler {
     }
   }
 
-  private addUser() {
-    console.log("Admin operation: Add User");
-    // Implementation here
-  }
-
-  private updateMenuItem() {
+  private async updateMenuItem() {
     console.log("Admin operation: Update Menu Item");
-    this.rl.question("Enter the ID of the menu item to update: ", (id) => {
-      this.rl.question("Enter the new name of the menu item: ", (name) => {
-        this.rl.question("Enter the new description: ", (description) => {
-          this.rl.question("Enter the new price: ", (price) => {
-            this.rl.question(
-              "Enter the new availability status (1/0): ",
-              (availability_status) => {
-                const updatedItem = {
-                  id,
-                  name,
-                  description,
-                  price,
-                  availability_status,
-                };
 
-                this.socket.emit(
-                  "updateMenuItem",
-                  updatedItem,
-                  (response: any) => {
-                    if (response.status === "success") {
-                      console.log("Menu item updated successfully.");
-                    } else {
-                      console.log(
-                        "Failed to update menu item:",
-                        response.error
-                      );
-                    }
-                    new UserOperationsHandler(this.socket, this.rl).initiate();
-                  }
-                );
-              }
-            );
-          });
-        });
+    const question = (query: string): Promise<string> => {
+      return new Promise((resolve) => {
+        this.rl.question(query, (answer) => resolve(answer));
       });
-    });
+    };
+
+    try {
+      const id = await question("Enter the ID of the menu item to update: ");
+      const name = await question("Enter the new name of the menu item: ");
+      const description = await question("Enter the new description: ");
+      const price = parseFloat(await question("Enter the new price: "));
+      const availability_status =
+        (await question("Enter the new availability status (1/0): ")) === "1";
+
+      const updatedItem = {
+        id,
+        name,
+        description,
+        price,
+        availability_status,
+      };
+
+      this.socket.emit("updateMenuItem", updatedItem, (response: any) => {
+        if (response.status === "success") {
+          console.log("Menu item updated successfully.");
+        } else {
+          console.log("Failed to update menu item:", response.error);
+        }
+        new UserOperationsHandler(this.socket, this.rl).initiate();
+      });
+    } catch (error) {
+      console.log("Error updating menu item:", error);
+      new UserOperationsHandler(this.socket, this.rl).initiate();
+    }
   }
 
   private async addNewItem() {
@@ -154,10 +142,5 @@ export class AdminOperationsHandler {
         new UserOperationsHandler(this.socket, this.rl).initiate();
       });
     });
-  }
-
-  private viewMonthlyReport() {
-    console.log("Admin operation: View Monthly Report");
-    // Implementation here
   }
 }
